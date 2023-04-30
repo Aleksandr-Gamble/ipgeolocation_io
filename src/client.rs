@@ -1,12 +1,17 @@
-//! This module introduces the IpGeoClient
-//! It can be easily instantiated and then used to make calls to ipgeolocation.io services.
+//! This module introduces the IpGeoClient. All it needs to be instantiated is an api key. Then you
+//! can make asynchronous calls using the .parse_ip() and .parse_ua() methods.  
 
 
-use reqwest::{get, Client};
+use reqwest::{get, Client, Error};
 use crate::{ip, ua};
 
-pub type GenericError = Box<dyn std::error::Error + Send + Sync>;
 
+/// The IpGeoClient struct is the client. Just call .new() with an api key:
+/// # Examples 
+/// ```
+/// use ipgeolocation_io::client::IpGeoClient;
+/// let client = IpGeoClient::new("some_api_key");
+/// ```
 #[derive(Clone)]
 pub struct IpGeoClient {
     api_key: String 
@@ -34,7 +39,7 @@ impl IpGeoClient {
     }
 
 
-    pub async fn parse_ip(&self, ip_address: &str) -> Result<ip::IpAddress, GenericError> {
+    pub async fn parse_ip(&self, ip_address: &str) -> Result<ip::IpAddress, Error> {
         let url = self.ipgeo_url(ip_address);
         let resp = get(&url)
             .await?
@@ -43,7 +48,7 @@ impl IpGeoClient {
         Ok(resp)
     }
 
-    pub async fn parse_ua(&self, user_agent: &str) -> Result<ua::UserAgent, GenericError> {
+    pub async fn parse_ua(&self, user_agent: &str) -> Result<ua::UserAgent, Error> {
         let url = self.uaparse_url();
         let payload = ua::ReqPayload::new(user_agent);
         let client = Client::new();

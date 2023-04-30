@@ -1,11 +1,15 @@
 use std::env;
-use tokio;
-use ipgeolocation_io::ipgeo::IpGeoClient;
+use ipgeolocation_io::client::IpGeoClient;
 
 #[tokio::main]
 async fn main(){
     let api_key = env::var("IPGEOLOCATION_IO_KEY").unwrap();
     let client = IpGeoClient::new(&api_key);
-    let resp = client.geoloc_ip("8.8.8.8").await.unwrap();
-    println!("{:?}", &resp);
+    loop {
+        let mut input = String::new();
+        println!("\n\nEnter an IP address: ");
+        let _ = std::io::stdin().read_line(&mut input).unwrap();
+        let resp = client.parse_ip(&input).await.unwrap();
+        println!("{:?}", &resp);
+    }
 }
