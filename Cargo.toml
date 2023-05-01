@@ -7,8 +7,13 @@ edition = "2021"
 
 
 [[example]]
-name = "demo"
-path = "examples/demo.rs"
+name = "readme"
+path = "examples/readme.rs" 
+
+
+[[example]]
+name = "ip_addresses"
+path = "examples/ip_addresses.rs"
 
 
 [dependencies]
