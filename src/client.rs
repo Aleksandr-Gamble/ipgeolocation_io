@@ -65,9 +65,12 @@ impl IpGeoClient {
         let url = self.ipgeo_url(ip_address);
         let resp = get(&url)
             .await?
-            .json::<ip::IpAddress>()
+            .json::<ResultIP>()
             .await?;
-        Ok(resp)
+        match resp {
+            ResultIP::Succ(ip_addy) => Ok(ip_addy),
+            ResultIP::ErrMsg(err_msg) => Err(err_msg.into()),
+        }
     }
 
 
@@ -82,28 +85,65 @@ impl IpGeoClient {
             .json::<ResultUA>()
             .await?;
         match resp {
-            ResultUA::Paid(user_agent) => Ok(user_agent),
-            ResultUA::Unpaid(se) => Err(se.into()),
+            ResultUA::Succ(usr_agnt) => Ok(usr_agnt),
+            ResultUA::ErrMsg(err_msg) => Err(err_msg.into()),
         }
     }
 }
 
 
-/// This private struct makes deserialization of the response as either a user agent OR a message
-/// about not having the proper subscription easy.
+/// Most error messages returned by the API are of the format below. Two common ones are
+/// 1) *"Custom User-Agent lookup is not supported on your free subscription. This feature is
+/// available to all paid subscriptions only."*  
+/// 2) *"Provided API key is not valid. Contact technical support for assistance at support@ipgeolocation.io"*  
 #[derive(Serialize, Deserialize, Debug)]
-#[serde(untagged)]
-enum ResultUA {
-    Paid(ua::UserAgent),
-    Unpaid(ua::SubscriptionError),
+pub struct ErrorMessage {
+    /// The two most common errors are  
+    /// 1) *"Custom User-Agent lookup is not supported on your free subscription. This feature is
+    /// available to all paid subscriptions only."*  
+    /// 2) *"Provided API key is not valid. Contact technical support for assistance at support@ipgeolocation.io"*  
+    pub message: String
 }
 
 
-/// This error has enums for a generic HTTP error as well as not having a suffucient subscription 
+impl std::error::Error for ErrorMessage {
+    fn description(&self) -> &str {
+        &self.message 
+    }
+}
+
+
+impl std::fmt::Display for ErrorMessage {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f,"{}",self.message )
+    }
+}
+
+
+
+// This private struct deserializes a ua::UserAgent OR an ErrorMessage
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(untagged)]
+enum ResultUA {
+    Succ(ua::UserAgent),
+    ErrMsg(ErrorMessage),
+}
+
+// This private struct deserializes an ip::IpAddress OR an ErrorMessage
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(untagged)]
+enum ResultIP {
+    Succ(ip::IpAddress),
+    ErrMsg(ErrorMessage),
+}
+
+
+/// This error has enums for a generic HTTP error (from reqwest)
+/// as well as an error message provided by the API  
 #[derive(Debug)]
 pub enum IpGeoError {
     HTTP(ReqwestError),
-    Tier(ua::SubscriptionError),
+    Auth(ErrorMessage),
 }
 
 
@@ -113,9 +153,9 @@ impl From<ReqwestError> for IpGeoError {
     }
 }
 
-impl From<ua::SubscriptionError> for IpGeoError {
-    fn from(e: ua::SubscriptionError) -> Self {
-        IpGeoError::Tier(e)
+impl From<ErrorMessage> for IpGeoError {
+    fn from(e: ErrorMessage) -> Self {
+        IpGeoError::Auth(e)
     }
 }
 

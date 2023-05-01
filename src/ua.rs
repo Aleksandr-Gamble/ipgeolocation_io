@@ -96,30 +96,5 @@ pub struct UserAgent {
 }
 
 
-/// The custom user_agent parsing method is only available with paid subscriptions.  
-/// If you have the developer (free) subscription, you will get this error: 
-/// "Custom User-Agent lookup is not supported on your free subscription. This feature is
-/// available to all paid subscriptions only."
-#[derive(Serialize, Deserialize, Debug)]
-pub struct SubscriptionError {
-    /// The message will likely read 
-    /// "Custom User-Agent lookup is not supported on your free subscription. This feature is available to all paid subscriptions only."
-    pub message: String
-}
-
-
-impl std::error::Error for SubscriptionError {
-    fn description(&self) -> &str {
-        &self.message 
-    }
-}
-
-
-impl std::fmt::Display for SubscriptionError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f,"{}",self.message )
-    }
-}
-
 
 
