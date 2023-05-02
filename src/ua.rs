@@ -55,8 +55,6 @@ pub struct Engine {
     pub version: String,
     /// The major version, i.e. "601"
     pub versionMajor: String,
-    /// build, if specified, often "Unknown" 
-    pub build: String,
 }
 
 

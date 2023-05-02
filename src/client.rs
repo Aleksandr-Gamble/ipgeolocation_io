@@ -89,6 +89,7 @@ impl IpGeoClient {
             ResultUA::ErrMsg(err_msg) => Err(err_msg.into()),
         }
     }
+
 }
 
 
