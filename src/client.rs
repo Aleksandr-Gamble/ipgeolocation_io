@@ -147,6 +147,14 @@ pub enum IpGeoError {
     Auth(ErrorMessage),
 }
 
+impl std::error::Error for IpGeoError {}
+
+impl std::fmt::Display for IpGeoError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f,"{:?}", &self )
+    }
+}
+
 
 impl From<ReqwestError> for IpGeoError {
     fn from(e: ReqwestError) -> Self {
